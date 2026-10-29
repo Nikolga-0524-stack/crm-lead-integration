@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI-помощник по заявкам — MVP</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%234f46e5'/><text x='50' y='69' font-size='50' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'>AI</text></svg>">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__mark">AI</span>
+        <div class="brand__text">
+          <span class="brand__name">ОфисМебель · отдел продаж</span>
+          <span class="brand__sub">MVP первичной обработки заявок</span>
+        </div>
+      </div>
+      <span class="pill">Данные маскируются перед ИИ</span>
+    </header>
+
+    <main>
+      <section class="intro">
+        <h1>Заявка → ИИ → карточка для менеджера</h1>
+        <p>
+          Заполните данные клиента и текст обращения. Помощник выделит суть, проверит,
+          целевой ли это лид, отметит недостающие данные и подготовит черновик ответа.
+          После анализа заявка сохраняется в Битрикс24: контакт клиента и сделка.
+        </p>
+      </section>
+
+      <div class="layout">
+        <section class="panel input-panel">
+          <div class="panel__head">
+            <h2>Входящая заявка</h2>
+            <span class="counter" id="counter">0 / 8000</span>
+          </div>
+
+          <form class="lead-form" id="lead-form" novalidate>
+            <div class="form-grid">
+              <div class="form-field form-field--wide">
+                <label class="form-field__label" for="lead-name">
+                  Имя клиента <span class="req">*</span>
+                </label>
+                <input
+                  class="input"
+                  id="lead-name"
+                  name="name"
+                  type="text"
+                  maxlength="120"
+                  autocomplete="name"
+                  placeholder="Например: Анна Смирнова"
+                >
+                <span class="field-error" data-error-for="name" hidden></span>
+              </div>
+
+              <div class="form-field">
+                <label class="form-field__label" for="lead-phone">
+                  Телефон
+                </label>
+                <input
+                  class="input"
+                  id="lead-phone"
+                  name="phone"
+                  type="tel"
+                  inputmode="tel"
+                  maxlength="40"
+                  autocomplete="tel"
+                  placeholder="+7 900 000-00-00"
+                >
+                <span class="field-error" data-error-for="phone" hidden></span>
+              </div>
+
+              <div class="form-field">
+                <label class="form-field__label" for="lead-email">
+                  Почта
+                </label>
+                <input
+                  class="input"
+                  id="lead-email"
+                  name="email"
+                  type="email"
+                  maxlength="120"
+                  autocomplete="email"
+                  placeholder="client@company.ru"
+                >
+                <span class="field-error" data-error-for="email" hidden></span>
+              </div>
+
+              <p class="form-hint form-field--wide">
+                Достаточно телефона или почты — укажите хотя бы один способ связи.
+              </p>
+
+              <div class="form-field form-field--wide">
+                <label class="form-field__label" for="lead-text">
+                  Заявка <span class="req">*</span>
+                </label>
+                <textarea
+                  id="lead-text"
+                  name="text"
+                  maxlength="8000"
+                  spellcheck="false"
+                  placeholder="Например: «Здравствуйте! Мы переезжаем в новый офис на 30 человек и хотим заказать столы, кресла и шкафы. Подскажите, пожалуйста, стоимость и сроки».&#10;&#10;Ctrl + Enter — обработать заявку."
+                ></textarea>
+                <span class="field-error" data-error-for="text" hidden></span>
+              </div>
+            </div>
+          </form>
+
+          <div class="samples">
+            <span class="samples__label">Тестовые заявки:</span>
+            <div class="samples__buttons" id="samples"></div>
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="submit" type="submit" form="lead-form">
+              <span class="primary__spinner" aria-hidden="true"></span>
+              <span class="primary__text">Обработать заявку</span>
+            </button>
+            <button class="ghost" id="clear" type="button">Очистить</button>
+          </div>
+
+          <p class="note">
+            Перед отправкой в GigaChat имя, телефон и почта заменяются токенами,
+            а после ответа возвращаются в карточку. В Битрикс24 сохраняются все поля
+            формы и AI-карточка. Если CRM недоступна, анализ и карточка на странице
+            всё равно останутся доступны. Для демонстрации используйте вымышленные данные.
+          </p>
+        </section>
+
+        <section class="panel result-panel" id="result" aria-live="polite">
+          <div class="empty" id="empty-state">
+            <div class="empty__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3h8l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+                <path d="M14 3v5h5"/>
+                <path d="M8.5 13h7M8.5 17h4.5"/>
+              </svg>
+            </div>
+            <h2>Здесь появится карточка</h2>
+            <p>Выберите пример слева или заполните форму и нажмите «Обработать заявку».</p>
+            <ul class="empty__list">
+              <li>тип лида и суть запроса;</li>
+              <li>известные и недостающие данные;</li>
+              <li>следующий шаг и черновик ответа;</li>
+              <li>ссылки на карточку клиента и сделку в Битрикс24.</li>
+            </ul>
+          </div>
+          <div id="result-body" hidden></div>
+        </section>
+      </div>
+
+      <section class="panel masked-panel" id="masked-panel" aria-labelledby="masked-title">
+        <div class="masked-panel__head">
+          <div class="masked-panel__heading">
+            <span class="masked-panel__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l7 3v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6l7-3z"/>
+                <path d="M9.5 12l1.8 1.8 3.4-3.6"/>
+              </svg>
+            </span>
+            <div>
+              <h2 id="masked-title">Что уходит в нейросеть</h2>
+              <p class="masked-panel__sub">Анонимизированный текст запроса к GigaChat</p>
+            </div>
+          </div>
+          <div class="masked-panel__tools">
+            <span class="masked-panel__badge">
+              <span class="masked-panel__badge-dot" aria-hidden="true"></span>
+              ПДн замаскированы
+            </span>
+            <button class="copy" id="copy-masked" type="button" hidden>Скопировать</button>
+          </div>
+        </div>
+
+        <pre class="masked-panel__text is-placeholder" id="masked-text">Обработайте заявку — здесь появится точный текст, который получит GigaChat.</pre>
+
+        <div class="masked-panel__footer">
+          <div class="masked-panel__stats" id="masked-stats" hidden></div>
+          <p class="masked-panel__note">
+            Реальные значения заменяются токенами вида <code>[ИМЯ_1]</code> и остаются на сервере.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>MVP для интенсива · GigaChat API + Битрикс24</span>
+      <span id="model-label"></span>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

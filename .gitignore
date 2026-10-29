@@ -1,0 +1,29 @@
+# Секреты и локальные настройки
+.env
+.env.*
+!.env.example
+
+# Виртуальное окружение
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Редакторы и ОС
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Журналы приложения
+logs/
+*.log
+
+# Сертификаты (кроме примера)
+certs/*
+!certs/.gitkeep
+!certs/*.example.*
+!certs/README*
